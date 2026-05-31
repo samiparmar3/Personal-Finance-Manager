@@ -17,6 +17,12 @@ const otherTotal = document.querySelector("#other-total");
 
 const transactionList = document.querySelector("#transaction-list");
 
+const highestBtn = document.querySelector("#highest-btn");
+const lowestBtn = document.querySelector("#lowest-btn");
+const newestBtn = document.querySelector("#newest-btn");
+const oldestBtn = document.querySelector("#oldest-btn");
+const filterCategory = document.querySelector("#filter-category");
+
 
 // Update balance card
 function updateBalance() {
@@ -32,6 +38,45 @@ function clearInputs() {
     category.value = "";
 }
 
+// Highest Transaction
+highestBtn.addEventListener("click", function () {
+
+    const highest = [...arr].sort(function (a, b) {
+        return b.amount - a.amount;
+    });
+
+    renderTransactions(highest);
+});
+
+// Lowest Transaction
+lowestBtn.addEventListener("click", function () {
+
+    const lowest = [...arr].sort(function (a, b) {
+        return a.amount - b.amount;
+    });
+
+    renderTransactions(lowest);
+});
+
+// Newest Transaction
+newestBtn.addEventListener("click", function () {
+
+    const newest = [...arr].sort(function (a, b) {
+        return b.time - a.time;
+    });
+
+    renderTransactions(newest);
+});
+
+// Oldest Transaction
+oldestBtn.addEventListener("click", function () {
+
+    const oldest = [...arr].sort(function (a, b) {
+        return a.time - b.time;
+    });
+
+    renderTransactions(oldest);
+});
 
 // Update category analytics
 function updateCategoryAnalytics() {
@@ -121,23 +166,83 @@ function deleteTransaction(li, transactionType, transactionAmount, transactionCa
     updateBalance();
 }
 
+filterCategory.addEventListener("change", function () {
 
-// Add transaction to history
+    if (this.value === "all") {
+
+        renderTransactions(arr);
+
+    } else {
+
+        const filtered = arr.filter(function (transition) {
+
+            return transition.category === filterCategory.value;
+
+        });
+
+        renderTransactions(filtered);
+    }
+});
+
+function renderTransactions(data) {
+
+    transactionList.innerHTML = "";
+
+    data.forEach(function (transition) {
+
+        const li = document.createElement("li");
+
+        li.classList.add("transaction-item");
+
+        li.innerHTML = `
+        <div class="transaction-left">
+            <h4>${transition.name}</h4>
+            <p>${transition.category}</p>
+        </div>
+
+        <div class="transaction-center">
+            ${transition.date}
+        </div>
+
+        <div class="transaction-right">
+            <span class="transaction-amount">
+                ₹${transition.amount}
+            </span>
+        </div>
+        `;
+
+        transactionList.append(li);
+    });
+}
+const arr = [];
+
 function history() {
 
     const transactionType = type.value;
     const transactionAmount = Number(amount.value);
     const transactionCategory = category.value;
 
+    const transition = {
+    name: itemName.value,
+    type: transactionType,
+    amount: transactionAmount,
+    category: transactionCategory,
+    date: new Date().toLocaleString(),
+    time: Date.now()
+};
+
+    // Array me add karo
+    arr.push(transition);
+
     const li = document.createElement("li");
     li.classList.add("transaction-item");
 
     const date = new Date();
 
-   li.innerHTML = `
+    li.innerHTML = `
     <div class="transaction-left">
-        <h4>${itemName.value}</h4>
-        <p>${transactionCategory}</p>
+        <h4>${transition.name}</h4>
+        <p>${transition.category}</p>
     </div>
 
     <div class="transaction-center">
@@ -146,30 +251,32 @@ function history() {
 
     <div class="transaction-right">
         <span class="transaction-amount">
-            ₹${transactionAmount}
+            ₹${transition.amount}
         </span>
 
         <button class="delete-btn">
             Delete
         </button>
     </div>
-`;
+    `;
+
     const deleteBtn = li.querySelector(".delete-btn");
 
-    deleteBtn.addEventListener("click", () => {
-        deleteTransaction(
-            li,
-            transactionType,
-            transactionAmount,
-            transactionCategory
-        );
+    deleteBtn.addEventListener("click", function () {
+
+        const position = arr.indexOf(transition);
+
+        arr.splice(position, 1);
+
+        li.remove();
+
+        console.log(arr);
     });
 
     transactionList.prepend(li);
 
     clearInputs();
 }
-
 
 // Handle income transaction
 function Income(callback) {
@@ -206,14 +313,11 @@ function Expense(callback) {
 // Main function
 function check() {
     if (type.value === "expense" && category.value === "") {
-    alert("Please select category");
-    return;
-}
+        alert("Please select category");
+        return;
+    }
 
-    if (
-        itemName.value.trim() === "" ||
-        amount.value.trim() === ""
-    ) {
+    if (itemName.value.trim() === "" || amount.value.trim() === "") {
         alert("Please fill all fields");
         return;
     }
